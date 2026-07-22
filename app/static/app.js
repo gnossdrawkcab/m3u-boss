@@ -278,6 +278,7 @@ const pageLoaders = {
   guide: loadGuide,
   export: loadExportPage,
   teamarr: loadTeamarr,
+  safety: () => window.M3UBossFeatures?.loadSafetyCenter(),
   settings: loadRefreshSettings,
 };
 
@@ -1025,6 +1026,8 @@ function renderGroupBody(g) {
         <button class="btn btn-sm" onclick="bulkCopyGroup('${g.id}')">Copy</button>
         <button class="btn btn-sm btn-success" onclick="bulkToggleGroup('${g.id}',true)">Enable</button>
         <button class="btn btn-sm btn-ghost" onclick="bulkToggleGroup('${g.id}',false)">Disable</button>
+        <button class="btn btn-sm" onclick="bulkLockGroup('${g.id}',true)" title="Prevent rules and refreshes from relocating selected stations">🔒 Lock</button>
+        <button class="btn btn-sm btn-ghost" onclick="bulkLockGroup('${g.id}',false)" title="Allow rules to relocate selected stations">Unlock</button>
         <button class="btn btn-sm" style="color:var(--warning)" onclick="bulkFavGroup('${g.id}',true)">★ Fav</button>
         <select class="grp-bulk-epg" data-gid="${g.id}" style="font-size:12px" onchange="bulkEpgGroup('${g.id}',this.value);this.selectedIndex=0">
           <option value="">EPG...</option>
@@ -2015,6 +2018,17 @@ window.bulkFavGroup = async (gid, fav) => {
     await loadGroupChannels(gid, 0);
     renderGroups();
   } catch (e) { toast("error", "Update failed", e.message); }
+};
+
+window.bulkLockGroup = async (gid, locked) => {
+  const ids = getSelectedIds(gid);
+  if (!ids.length) { toast("info", "No channels selected"); return; }
+  try {
+    await api("/api/channels/bulk-lock", { method: "POST", body: JSON.stringify({ channel_ids: ids, locked }) });
+    toast("success", locked ? "Station placement locked" : "Station placement unlocked", `${ids.length} updated`);
+    await loadGroupChannels(gid, 0);
+    renderGroups();
+  } catch (e) { toast("error", "Lock update failed", e.message); }
 };
 
 window.bulkEpgGroup = async (gid, action) => {

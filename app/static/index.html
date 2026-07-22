@@ -22,7 +22,7 @@
         </div>
         <div>
           <div class="brand-text">M3U Boss</div>
-          <div class="brand-version">v0.1 alpha</div>
+          <div class="brand-version">v0.2 alpha</div>
         </div>
       </div>
       <ul class="nav-section">
@@ -64,6 +64,10 @@
           <span>Teamarr</span>
         </a></li>
         <li class="nav-section-label">System</li>
+        <li><a href="#safety" data-page="safety" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <span>Safety Center</span>
+        </a></li>
         <li><a href="#settings" data-page="settings" class="nav-link">
           <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
           <span>Settings</span>
@@ -541,7 +545,7 @@
                   <div class="field"><label class="field-label">Status</label><select id="ta-enabled"><option value="0">Disabled</option><option value="1">Enabled</option></select></div>
                   <div class="field"><label class="field-label">Base URL <span class="optional">server address</span></label><input id="ta-base-url" type="text" placeholder="http://yourserver:43817" /></div>
                   <div class="field"><label class="field-label">Username</label><input id="ta-username" type="text" autocomplete="off" /></div>
-                  <div class="field"><label class="field-label">Password</label><input id="ta-password" type="text" autocomplete="off" /></div>
+                  <div class="field"><label class="field-label">Password</label><input id="ta-password" type="password" autocomplete="new-password" /></div>
                   <div class="field"><label class="field-label">Output Format</label><select id="ta-output"><option value="ts">TS (MPEG)</option><option value="m3u8">M3U8 (HLS)</option></select></div>
                 </div>
                 <div class="mt"><button type="submit" class="btn btn-primary">Save Settings</button></div>
@@ -611,6 +615,68 @@
             <video id="preview-player" controls autoplay></video>
           </div>
           <div id="preview-schedule" class="preview-schedule"></div>
+        </div>
+      </div>
+
+      <!-- ── Safety Center ────────────────────────────────────── -->
+      <div class="page" id="page-safety">
+        <div class="page-wrap">
+          <div class="page-header safety-heading">
+            <div>
+              <h1 class="page-title">Safety Center</h1>
+              <p class="page-desc">Review changes before they land, keep trusted stations fixed, and recover safely.</p>
+            </div>
+            <button id="safety-refresh" class="btn btn-sm">Refresh</button>
+          </div>
+          <div class="safety-grid">
+            <div class="card safety-wide">
+              <div class="card-header"><span class="card-title">Guided Setup</span><span id="setup-progress" class="dash-pill"></span></div>
+              <div class="card-body" id="setup-checklist"><span class="text-muted">Loading…</span></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Lineup History</span></div>
+              <div class="card-body">
+                <div class="form-row safety-actions">
+                  <input id="snapshot-label" type="text" maxlength="120" placeholder="Before playoff changes" />
+                  <button id="snapshot-create" class="btn btn-primary btn-sm">Save Snapshot</button>
+                  <button id="history-undo" class="btn btn-sm">Undo Last Change</button>
+                </div>
+                <div id="snapshot-list" class="safety-list"></div>
+                <details class="safety-action-details"><summary>Recent high-impact actions</summary><div id="action-history-list" class="safety-list"></div></details>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Import Review</span></div>
+              <div class="card-body">
+                <p class="text-muted mb">Fetch a source without changing your lineup. Removed or locked stations are highlighted before refresh.</p>
+                <div class="form-row safety-actions">
+                  <select id="preview-source"></select>
+                  <button id="preview-source-run" class="btn btn-sm">Preview Refresh</button>
+                </div>
+                <div id="import-preview-result" class="safety-result text-muted">Choose a source to preview.</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Guide Quality</span><button id="guide-quality-run" class="btn btn-sm">Scan</button></div>
+              <div class="card-body" id="guide-quality-result"><span class="text-muted">Run a scan for empty guides, generic titles, and blank listings.</span></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Teamarr Compatibility</span></div>
+              <div class="card-body" id="teamarr-compatibility"><span class="text-muted">Loading…</span></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Validate a Backup</span></div>
+              <div class="card-body">
+                <p class="text-muted mb">Inspect structure, references, and schema version without restoring anything.</p>
+                <label class="btn btn-sm" style="cursor:pointer">Choose JSON Backup<input id="backup-validate-file" type="file" accept=".json,application/json" hidden /></label>
+                <div id="backup-validation-result" class="safety-result text-muted">No file selected.</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Migration Health</span></div>
+              <div class="card-body" id="migration-health"><span class="text-muted">Loading…</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -884,6 +950,7 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=9"></script>
+  <script src="/static/app.js?v=10"></script>
+  <script src="/static/release-features.js?v=1"></script>
 </body>
 </html>

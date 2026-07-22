@@ -23,7 +23,7 @@ def test_schema_is_versioned_and_clean_install_is_neutral(monkeypatch, tmp_path)
     conn = db._conn()
     assert conn.execute(
         "SELECT value FROM schema_meta WHERE key='schema_version'"
-    ).fetchone()[0] == "2"
+    ).fetchone()[0] == "3"
     assert conn.execute("SELECT COUNT(*) FROM groups_").fetchone()[0] == 0
     assert conn.execute(
         "SELECT value FROM settings WHERE key='public_defaults_v1'"
@@ -43,6 +43,8 @@ def test_upgrade_adds_release_tables_without_losing_lineup(monkeypatch, tmp_path
     )
     conn.execute("DROP TABLE teamarr_category_ids")
     conn.execute("DROP TABLE teamarr_stream_ids")
+    conn.execute("DROP TABLE lineup_snapshots")
+    conn.execute("DROP TABLE action_history")
     conn.execute("DROP TABLE schema_meta")
     conn.commit()
 
@@ -50,7 +52,11 @@ def test_upgrade_adds_release_tables_without_losing_lineup(monkeypatch, tmp_path
     assert db.get_channel("existing-channel")["name"] == "Existing"
     assert conn.execute(
         "SELECT value FROM schema_meta WHERE key='schema_version'"
-    ).fetchone()[0] == "2"
+    ).fetchone()[0] == "3"
+    for table in ("lineup_snapshots", "action_history"):
+        assert conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone()
 
 
 def test_management_requires_admin_auth(monkeypatch, tmp_path):
@@ -154,6 +160,19 @@ def test_teamarr_uses_numeric_stable_ids_and_returns_epg(monkeypatch, tmp_path):
         **params, "action": "get_short_epg", "stream_id": streams[0]["stream_id"]
     }).json()["epg_listings"]
     assert base64.b64decode(epg[0]["title"]).decode() == "Evening News"
+    simple = client.get("/player_api.php", params={
+        **params, "action": "get_simple_data_table", "stream_id": streams[0]["stream_id"]
+    }).json()["epg_listings"]
+    assert simple == epg
+    for action in ("get_vod_categories", "get_vod_streams",
+                   "get_series_categories", "get_series"):
+        assert client.get("/player_api.php", params={**params, "action": action}).json() == []
+    assert client.get("/player_api.php", params={
+        "username": "viewer", "password": "wrong"
+    }).status_code == 403
+    account = client.get("/player_api.php", params=params).json()
+    assert account["user_info"]["status"] == "Active"
+    assert account["server_info"]["timezone"] == "UTC"
     assert client.get("/teamarr.xml").status_code == 403
 
 

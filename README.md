@@ -12,6 +12,7 @@ curated M3U and XMLTV guide.
 
 - Multiple simultaneous M3U and Xtream live-TV sources
 - Stable channel identity, placement locks, tombstone revival, and player numbers
+- Safety Center with import previews, named snapshots, action history, and undo
 - Fast lazy-loaded desktop and mobile channel editor with current listings
 - Exact, contains, prefix, and regular-expression organization rules
 - XMLTV aggregation, matching, diagnostics, dummy EPG, and filtered exports
@@ -44,6 +45,11 @@ Never run two instances against the same SQLite database.
 4. Lock hand-curated channel names or placements that must survive refreshes.
 5. Export, then give your player the displayed M3U and XMLTV URLs.
 
+The **Safety Center** guides a new installation, previews source churn without
+applying it, validates JSON backups, scans guide quality, and records automatic
+undo points before high-impact lineup operations. Its lineup snapshots never
+contain source URLs, provider credentials, or integration settings.
+
 Unmatched channels stay where they are. Rules do not silently dump the rest of
 the lineup into a catch-all group.
 
@@ -62,6 +68,9 @@ series libraries, catch-up, or connection-limit enforcement.
 Please report the player name/version with Teamarr compatibility bugs. TiviMate,
 Smarters, XCIPTV, Televizo, and other clients do not interpret every Xtream
 response identically.
+
+See [docs/TEAMARR_COMPATIBILITY.md](docs/TEAMARR_COMPATIBILITY.md) for the tested
+contract, deliberately unsupported surfaces, and a client-report checklist.
 
 For support issues, download `/api/system/diagnostics-bundle`. It omits source
 names, URLs, usernames, passwords, and tokens. Review it before attaching it;

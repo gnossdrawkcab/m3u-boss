@@ -99,6 +99,15 @@ def _conn() -> sqlite3.Connection:
     raise last_error
 
 
+def connection() -> sqlite3.Connection:
+    """Return the current thread's configured database connection.
+
+    Feature modules use this small public boundary instead of reaching into the
+    connection-pool implementation. Callers must commit or roll back writes.
+    """
+    return _conn()
+
+
 # ---------------------------------------------------------------------------
 # Schema
 # ---------------------------------------------------------------------------
@@ -211,6 +220,27 @@ def init_db() -> None:
             xml_size      INTEGER NOT NULL DEFAULT 0
         );
 
+        CREATE TABLE IF NOT EXISTS lineup_snapshots (
+            id            TEXT PRIMARY KEY,
+            label         TEXT NOT NULL,
+            kind          TEXT NOT NULL DEFAULT 'manual',
+            payload       BLOB NOT NULL,
+            checksum      TEXT NOT NULL,
+            channel_count INTEGER NOT NULL DEFAULT 0,
+            group_count   INTEGER NOT NULL DEFAULT 0,
+            created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS action_history (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            action      TEXT NOT NULL,
+            summary     TEXT NOT NULL DEFAULT '',
+            snapshot_id TEXT,
+            status      TEXT NOT NULL DEFAULT 'completed',
+            created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (snapshot_id) REFERENCES lineup_snapshots(id) ON DELETE SET NULL
+        );
+
         CREATE TABLE IF NOT EXISTS group_templates (
             id          TEXT    PRIMARY KEY,
             name        TEXT    NOT NULL,
@@ -266,6 +296,8 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_ch_enabled ON channels(enabled);
         CREATE INDEX IF NOT EXISTS idx_tomb_source_stream ON channel_tombstones(source_id, stream_id);
         CREATE INDEX IF NOT EXISTS idx_tomb_source_url ON channel_tombstones(source_id, url);
+        CREATE INDEX IF NOT EXISTS idx_lineup_snapshots_created ON lineup_snapshots(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_action_history_created ON action_history(created_at DESC);
     """)
 
     # Migration: add columns to groups_ if missing
@@ -336,7 +368,7 @@ def init_db() -> None:
         conn.execute("INSERT OR IGNORE INTO settings (key,value) VALUES (?,?)", (k, v))
     _initialize_public_defaults(conn)
     conn.execute(
-        "INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','2')"
+        "INSERT OR REPLACE INTO schema_meta(key,value) VALUES('schema_version','3')"
     )
     conn.commit()
 # ---------------------------------------------------------------------------
@@ -1018,8 +1050,25 @@ def get_group_max_sort_order(gid):
                        (gid,)).fetchone()[0]
     return mx
 
+def _tombstone_channel(conn, channel):
+    """Retain a recoverable private row before an intentional deletion."""
+    row = dict(channel)
+    conn.execute(
+        """INSERT OR REPLACE INTO channel_tombstones
+           (channel_id,source_id,stream_id,url,original_tvg_id,source_name,
+            source_group,row_json,removed_at)
+           VALUES (?,?,?,?,?,?,?,?,datetime('now'))""",
+        (row["id"], row["source_id"], row.get("stream_id"), row.get("url") or "",
+         row.get("original_tvg_id") or "", row.get("source_name") or "",
+         row.get("source_group") or "", json.dumps(row, separators=(",", ":"))),
+    )
+
+
 def delete_channel(cid):
     conn = _conn()
+    row = conn.execute("SELECT * FROM channels WHERE id=?", (cid,)).fetchone()
+    if row:
+        _tombstone_channel(conn, row)
     conn.execute("DELETE FROM channels WHERE id=?", (cid,))
     conn.commit()
 
@@ -1027,6 +1076,8 @@ def delete_channels_bulk(cids):
     if not cids: return 0
     conn = _conn()
     ph = ",".join("?"*len(cids))
+    for row in conn.execute(f"SELECT * FROM channels WHERE id IN ({ph})", cids).fetchall():
+        _tombstone_channel(conn, row)
     conn.execute(f"DELETE FROM channels WHERE id IN ({ph})", cids)
     conn.commit()
     return len(cids)
@@ -1343,6 +1394,20 @@ def bulk_favorite_channels(cids, fav):
     conn = _conn()
     ph = ",".join("?"*len(cids))
     conn.execute(f"UPDATE channels SET favorite=? WHERE id IN ({ph})", [1 if fav else 0]+cids)
+    conn.commit()
+    return len(cids)
+
+
+def bulk_lock_channels(cids, locked):
+    """Protect or release channel placement for a selected station set."""
+    if not cids:
+        return 0
+    conn = _conn()
+    placeholders = ",".join("?" * len(cids))
+    conn.execute(
+        f"UPDATE channels SET placement_locked=? WHERE id IN ({placeholders})",
+        [1 if locked else 0] + cids,
+    )
     conn.commit()
     return len(cids)
 

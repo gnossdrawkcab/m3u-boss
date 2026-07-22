@@ -30,13 +30,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from app.models import (
+    AutoMatchApply, BulkDelete, BulkFavorite, BulkLock, BulkLogo, BulkMove,
+    BulkNameEpg, BulkRename, BulkToggle, ChannelMove, ChannelPatch, EPGPatch,
+    EPGSourceAdd, EpgRepairPackRequest, GroupCreate, GroupPatch, GroupReorder,
+    GroupTemplateSave, HealthCheckRequest, ImportM3U, ImportXC, LogoOverride,
+    ReorderChannels, RuleAdd, RuleSandboxRequest, SettingsUpdate,
+    SmartGroupsSettings,
+)
 
 from app.db import (
     activate_source, add_epg_source, add_m3u, add_rule, add_xc, assign_export_chnos,
     renumber_group_block, renumber_all_in_order,
     bulk_favorite_channels, bulk_move_channels, bulk_copy_channels, bulk_rename_channels,
-    bulk_toggle_channels,
+    bulk_toggle_channels, bulk_lock_channels,
     channel_stats, clear_dummy_tvg_ids, clear_groups, clear_source_channels, create_group,
     delete_channel, delete_channels_bulk,
     delete_epg_source, delete_group, delete_rule, delete_source,
@@ -757,6 +764,11 @@ from app.importers import (
 )
 from app.rules import (
     matches_rule, preview_rules, apply_rules, _auto_group_by_source, _assign_new_channels,
+)
+from app import history as lineup_history
+from app.release_features import (
+    create_router as create_release_features_router,
+    _validate_backup as validate_backup_data,
 )
 
 
@@ -2707,126 +2719,6 @@ def _suspicious_tvg_id(tvg_id: str) -> bool:
     return False
 
 
-# ═══════════════════════════════════════════════════════════════════
-# Pydantic models
-# ═══════════════════════════════════════════════════════════════════
-
-class ImportXC(BaseModel):
-    name: str = ""
-    server: str
-    username: str
-    password: str
-    output: str = Field(default="ts", pattern="^(ts|m3u8)$")
-    epg_url: str | None = None
-
-class ImportM3U(BaseModel):
-    name: str = ""
-    m3u_url: str
-    epg_url: str | None = None
-
-class EPGPatch(BaseModel):
-    epg_url: str
-
-class GroupCreate(BaseModel):
-    name: str
-    parent_id: str | None = None
-
-class GroupPatch(BaseModel):
-    name: str | None = None
-    enabled: bool | None = None
-    pinned: bool | None = None
-    teamarr: bool | None = None
-    name_epg: bool | None = None
-    category: str | None = None
-    export_tag: str | None = None
-    parent_id: str | None = None
-
-class GroupReorder(BaseModel):
-    group_ids: list[str]
-
-class RuleAdd(BaseModel):
-    field: str = Field(pattern="^(source_group|channel_name|any)$")
-    pattern: str
-    match_type: str = Field(default="contains", pattern="^(contains|starts_with|regex|exact)$")
-
-class ChannelPatch(BaseModel):
-    name: str | None = None
-    tvg_id: str | None = None
-    tvg_name: str | None = None
-    enabled: bool | None = None
-    favorite: bool | None = None
-    logo: str | None = None
-    placement_locked: bool | None = None
-    # Optional ordered list of fallback upstream URLs for source-failover.
-    # Tried only when the primary `url` fails during an active restream.
-    backup_urls: list[str] | None = None
-
-class ChannelMove(BaseModel):
-    to_group_id: str
-
-class BulkMove(BaseModel):
-    channel_ids: list[str]
-    to_group_id: str
-
-class BulkToggle(BaseModel):
-    channel_ids: list[str]
-    enabled: bool
-
-class BulkFavorite(BaseModel):
-    channel_ids: list[str]
-    favorite: bool
-
-class SettingsUpdate(BaseModel):
-    teamarr_enabled: str | None = None
-    teamarr_username: str | None = None
-    teamarr_password: str | None = None
-    teamarr_output: str | None = None
-    teamarr_base_url: str | None = None
-    refresh_interval_minutes: str | None = None
-    epg_window_days: str | None = None
-    # Optional: ping Dispatcharr to refresh its M3U account right after an
-    # export, so new match logos / channels land immediately instead of on
-    # Dispatcharr's own cadence. All blank/off by default — the user opts in by
-    # filling these in the UI; nothing is pre-populated.
-    dispatcharr_auto_refresh: str | None = None
-    dispatcharr_url: str | None = None
-    dispatcharr_username: str | None = None
-    dispatcharr_password: str | None = None
-    dispatcharr_m3u_account_id: str | None = None
-    dispatcharr_epg_source_id: str | None = None
-    # Optional ntfy push notifications for watchdog / refresh / dead-stream
-    # events. Off + blank by default; the user opts in via the UI.
-    ntfy_enabled: str | None = None
-    ntfy_url: str | None = None          # e.g. https://ntfy.sh or self-hosted
-    ntfy_topic: str | None = None
-    ntfy_token: str | None = None        # optional bearer token for protected topics
-
-class EPGSourceAdd(BaseModel):
-    name: str = ""
-    url: str
-
-class BulkRename(BaseModel):
-    pattern: str
-    replacement: str
-    is_regex: bool = False
-
-class BulkDelete(BaseModel):
-    channel_ids: list[str]
-
-class SmartGroupsSettings(BaseModel):
-    enabled: bool = False
-    cities: list[str] = []
-    window_hours: int = 4
-    custom_keywords: list[str] = []
-    # Locals smart group — independently toggled sub-feature that
-    # populates the existing "US | Locals" group with shadows of the
-    # local-station channels for the user's selected cities. Cities are
-    # free-text entries like "Pittsburgh, PA" or "Pittsburgh" (no state
-    # = match any state).
-    locals_enabled: bool = False
-    locals_cities: list[str] = []
-    locals_include_weather: bool = True
-
 # ── Sports city → team database ───────────────────────────────────
 SPORTS_CITIES: dict[str, dict] = {
     "Arizona": {"teams": ["Cardinals", "Diamondbacks", "Coyotes", "Suns", "Mercury", "Arizona State Sun Devils"]},
@@ -2879,7 +2771,7 @@ SPORTS_CITIES: dict[str, dict] = {
 # FastAPI App
 # ═══════════════════════════════════════════════════════════════════
 
-APP_VERSION = "0.1.0-alpha.1"
+APP_VERSION = "0.2.0-alpha.1"
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
@@ -2890,6 +2782,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="M3U Boss", version=APP_VERSION, lifespan=lifespan)
+app.include_router(create_release_features_router(schedule_export, EXPORT_DIR))
 
 _ADMIN_USERNAME = os.environ.get("M3U_BOSS_ADMIN_USERNAME", "admin")
 _ADMIN_PASSWORD = os.environ.get("M3U_BOSS_ADMIN_PASSWORD", "")
@@ -2967,7 +2860,42 @@ async def require_admin_auth(request: Request, call_next):
         if origin.rstrip("/") not in ({same_origin, public_origin} | configured):
             return Response("Untrusted request origin", status_code=403,
                             media_type="text/plain")
-    return await call_next(request)
+    # High-impact operations receive a compact, credential-free lineup undo
+    # point. Repeated calls of the same type within a minute reuse a snapshot,
+    # avoiding excessive database growth during batch workflows.
+    snapshot = None
+    method_path = f"{request.method} {path}"
+    high_impact = (
+        (request.method == "POST" and path in {
+            "/api/apply-rules", "/api/sources/reset", "/api/groups/reorder",
+            "/api/groups/renumber-all", "/api/restore", "/api/import/xc",
+            "/api/import/m3u",
+        })
+        or (request.method == "POST" and re.match(r"^/api/sources/\d+/refresh$", path))
+        or (request.method == "DELETE" and re.match(r"^/api/sources/\d+$", path))
+        or (request.method in {"POST", "DELETE"} and any(part in path for part in (
+            "/bulk-", "/reorder-channels", "/renumber-block", "/sort-alpha",
+            "/sort-by-source", "/sort-channels-by-priority",
+        )))
+        or (request.method == "DELETE" and path.startswith("/api/groups/"))
+    )
+    if high_impact:
+        try:
+            snapshot = lineup_history.create_snapshot(
+                f"Before {method_path}", "automatic", dedupe_seconds=60
+            )
+        except Exception as exc:
+            _record_backend_error("history.snapshot", exc)
+    response = await call_next(request)
+    if high_impact and snapshot:
+        try:
+            lineup_history.record_action(
+                method_path, "Automatic safety point",
+                snapshot.get("id"), "completed" if response.status_code < 400 else "failed",
+            )
+        except Exception as exc:
+            _record_backend_error("history.action", exc)
+    return response
 
 
 # ── Nightly DB backup ──────────────────────────────────────────────────────
@@ -3870,8 +3798,18 @@ def api_delete_rule(gid: str, rid: str):
 def api_preview_rule(gid: str, p: RuleAdd):
     rule = {"field": p.field, "pattern": p.pattern.strip(), "match_type": p.match_type}
     channels = get_all_channels_raw(source_id=get_active_source_ids())
-    count = sum(1 for ch in channels if matches_rule(ch, rule))
-    return {"match_count": count}
+    matches = [ch for ch in channels if matches_rule(ch, rule)]
+    protected = [ch for ch in matches if ch.get("placement_locked")]
+    moves = [ch for ch in matches if ch.get("group_id") != gid and not ch.get("placement_locked")]
+    already = [ch for ch in matches if ch.get("group_id") == gid]
+    group_names = {group["id"]: group["name"] for group in list_groups(source_id=get_active_source_ids())}
+    return {
+        "match_count": len(matches), "would_move": len(moves),
+        "protected": len(protected), "already_here": len(already),
+        "sample": [{"id": ch.get("id"), "name": ch.get("name"),
+                    "from_group": group_names.get(ch.get("group_id"), "Ungrouped")}
+                   for ch in moves[:30]],
+    }
 
 @app.post("/api/apply-rules")
 def api_apply_rules():
@@ -4054,9 +3992,10 @@ def api_bulk_fav(p: BulkFavorite):
     schedule_export()
     return {"ok": True, "updated": n}
 
-class BulkNameEpg(BaseModel):
-    channel_ids: list[str]
-    action: str = "name"  # "name", "unset", "restore"
+@app.post("/api/channels/bulk-lock")
+def api_bulk_lock(p: BulkLock):
+    n = bulk_lock_channels(p.channel_ids, p.locked)
+    return {"ok": True, "updated": n, "locked": p.locked}
 
 @app.post("/api/channels/bulk-epg")
 def api_bulk_epg(p: BulkNameEpg):
@@ -4076,11 +4015,6 @@ def api_bulk_epg(p: BulkNameEpg):
         updated += 1
     schedule_export()
     return {"ok": True, "updated": updated}
-
-class BulkLogo(BaseModel):
-    channel_ids: list[str]
-    action: str = "clear"  # "clear" or "set"
-    logo_url: str = ""
 
 @app.post("/api/channels/bulk-logo")
 def api_bulk_logo(p: BulkLogo):
@@ -4126,9 +4060,6 @@ def api_bulk_delete(p: BulkDelete):
     n = delete_channels_bulk(p.channel_ids)
     schedule_export()
     return {"ok": True, "deleted": n}
-
-class ReorderChannels(BaseModel):
-    channel_ids: list[str]
 
 @app.post("/api/groups/{gid}/reorder-channels")
 def api_reorder_channels(gid: str, p: ReorderChannels):
@@ -4305,26 +4236,6 @@ def api_export_history(limit: int = Query(50, ge=1, le=200)):
 
 
 # ── Channel Health Check ──────────────────────────────────────────
-
-class HealthCheckRequest(BaseModel):
-    channel_ids: list[str] = []
-    limit: int = 50
-
-
-class EpgRepairPackRequest(BaseModel):
-    group_name: str | None = None
-    restore_originals: bool = True
-    clear_dummy: bool = True
-    fix_suspicious: bool = True
-    dry_run: bool = False
-
-
-class RuleSandboxRequest(BaseModel):
-    field: str = "any"
-    pattern: str
-    match_type: str = "contains"
-    source_group: str | None = None
-    limit: int = 50
 
 @app.post("/api/channels/health-check")
 async def api_health_check(p: HealthCheckRequest):
@@ -4815,10 +4726,6 @@ def api_sources_reliability():
 
 # ── Group Templates ───────────────────────────────────────────────
 
-class GroupTemplateSave(BaseModel):
-    name: str
-    group_id: str | None = None  # if set, capture from this group
-
 @app.get("/api/groups/templates")
 def api_list_templates():
     return list_group_templates()
@@ -5000,12 +4907,6 @@ def api_logo_coverage():
     if this is empty."""
     with _logo_coverage_lock:
         return dict(_logo_coverage)
-
-
-class LogoOverride(BaseModel):
-    team: str
-    sport: str
-    badge_url: str
 
 
 @app.post("/api/logos/override")
@@ -5269,9 +5170,6 @@ def api_auto_match_preview(min_score: float = Query(0.4, ge=0.0, le=1.0),
     matches.sort(key=lambda m: m["score"], reverse=True)
     return {"matches": matches, "unmatched": len(unmatched)}
 
-
-class AutoMatchApply(BaseModel):
-    matches: list[dict]  # [{"channel_id": "...", "epg_id": "..."}, ...]
 
 @app.post("/api/epg-channels/auto-match")
 def api_auto_match_apply(body: AutoMatchApply):
@@ -7474,8 +7372,11 @@ async def api_restore(request: Request):
         raise HTTPException(400, f"Invalid JSON: {e}") from e
     if not isinstance(data, dict) or "sources" not in data:
         raise HTTPException(400, "Invalid backup format")
+    validation = validate_backup_data(data)
+    if not validation["valid"]:
+        raise HTTPException(400, "Backup validation failed: " + "; ".join(validation["errors"]))
     import_all_data(data)
-    return {"ok": True}
+    return {"ok": True, "validation": validation}
 
 
 # ═══════════════════════════════════════════════════════════════════
