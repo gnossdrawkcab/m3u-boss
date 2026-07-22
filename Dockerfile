@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 # ffmpeg: transcodes OTA channels (MPEG-2/AC-3) to browser-playable H.264/AAC.
 # fonts-dejavu-core: the "VS"/"@" glyph drawn on match-logo composites (Pillow).
