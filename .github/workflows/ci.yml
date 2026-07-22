@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install --require-hashes -r requirements.lock
+      - run: pip install -r requirements-dev.txt
+      - run: python -m py_compile app/*.py
+      - run: pytest -q
+        env:
+          M3U_BOSS_ADMIN_PASSWORD: test-only-password
+      - run: pip-audit -r requirements.lock
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: pip install --require-hashes -r requirements.lock
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: uvicorn app.main:app --host 127.0.0.1 --port 43817 > /tmp/m3u-boss.log 2>&1 &
+        env:
+          M3U_BOSS_ADMIN_PASSWORD: test-only-password
+          M3U_BOSS_DB: /tmp/m3u-boss-test/sources.db
+      - run: |
+          for attempt in $(seq 1 30); do
+            curl --fail --silent http://127.0.0.1:43817/healthz && exit 0
+            sleep 1
+          done
+          cat /tmp/m3u-boss.log
+          exit 1
+      - run: npm run test:e2e
+        env:
+          M3U_BOSS_ADMIN_PASSWORD: test-only-password
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose config --quiet
+      - run: docker build --tag m3u-boss:test .
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: m3u-boss:test
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+  edge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: edge/go.mod
+          cache-dependency-path: edge/go.mod
+      - run: gofmt -w *.go && git diff --exit-code
+        working-directory: edge
+      - run: go test ./...
+        working-directory: edge
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2

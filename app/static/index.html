@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M3U Boss</title>
+  <link rel="stylesheet" href="/static/styles.css?v=6" />
+</head>
+<body>
+  <div class="app">
+    <!-- ═══ Mobile Nav Toggle ═════════════════════════════════════ -->
+    <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+
+    <!-- ═══ Sidebar ═══════════════════════════════════════════════ -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div>
+          <div class="brand-text">M3U Boss</div>
+          <div class="brand-version">v0.1 alpha</div>
+        </div>
+      </div>
+      <ul class="nav-section">
+        <li class="nav-section-label">Overview</li>
+        <li><a href="#dashboard" data-page="dashboard" class="nav-link active">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+          <span>Dashboard</span>
+        </a></li>
+        <li class="nav-section-label">Manage</li>
+        <li><a href="#sources" data-page="sources" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></span>
+          <span>Sources</span>
+          <span class="nav-badge" id="nav-src-count">0</span>
+        </a></li>
+        <li><a href="#editor" data-page="editor" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+          <span>Editor</span>
+          <span class="nav-badge" id="nav-ch-count">0</span>
+        </a></li>
+        <li><a href="#favorites" data-page="favorites" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+          <span>Favorites</span>
+        </a></li>
+        <li class="nav-section-label">Output</li>
+        <li><a href="#epg" data-page="epg" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+          <span>EPG</span>
+        </a></li>
+        <li><a href="#guide" data-page="guide" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg></span>
+          <span>TV Guide</span>
+        </a></li>
+        <li><a href="#export" data-page="export" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
+          <span>Export</span>
+        </a></li>
+        <li><a href="#teamarr" data-page="teamarr" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+          <span>Teamarr</span>
+        </a></li>
+        <li class="nav-section-label">System</li>
+        <li><a href="#settings" data-page="settings" class="nav-link">
+          <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+          <span>Settings</span>
+        </a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button class="sidebar-tool" id="command-palette-btn" type="button" title="Quick actions (Ctrl/⌘ K)">
+          <span>⌘</span><span>Quick actions</span><kbd>Ctrl K</kbd>
+        </button>
+        <button class="sidebar-tool" id="density-toggle" type="button" title="Toggle compact layout">
+          <span>↕</span><span>Compact layout</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ═══ Main ═══════════════════════════════════════════════════ -->
+    <main class="main-content">
+
+      <!-- ── Dashboard ────────────────────────────────────────── -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-desc">Live operations center for source health, EPG quality, and export reliability</p>
+          </div>
+          <div class="card dash-hero" id="dashboard-hero">
+            <div class="card-body">
+              <div class="dash-hero-grid">
+                <div>
+                  <div class="dash-kicker">Control Plane</div>
+                  <h2 class="dash-title" id="dash-title">All systems loading...</h2>
+                  <p class="dash-sub" id="dash-sub">Pulling source, EPG, and export telemetry.</p>
+                  <div class="dash-chips" id="dashboard-health-chips"></div>
+                </div>
+                <div class="dash-actions">
+                  <button id="dash-refresh-now" class="btn btn-primary btn-sm">Refresh Sources</button>
+                  <button id="dash-run-coverage" class="btn btn-sm">Run Coverage</button>
+                  <button id="dash-open-guide" class="btn btn-sm">Open TV Guide</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stats-row" id="dashboard-stats"></div>
+          <div class="dash-grid">
+            <div class="card">
+              <div class="card-header"><span class="card-title">EPG Coverage Pulse</span></div>
+              <div class="card-body" id="dashboard-coverage"><span class="text-muted">Loading...</span></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Source Reliability</span></div>
+              <div class="card-body" id="dashboard-reliability"><span class="text-muted">Loading...</span></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Export Activity</span></div>
+              <div class="card-body" id="dashboard-trend"><span class="text-muted">Loading...</span></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Alerts &amp; Signals</span></div>
+              <div class="card-body" id="dashboard-alerts"><span class="text-muted">Loading...</span></div>
+            </div>
+          </div>
+          <div id="dashboard-source-info" style="margin-top:16px"></div>
+        </div>
+      </div>
+
+      <!-- ── Sources ──────────────────────────────────────────── -->
+      <div class="page" id="page-sources">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">Sources</h1>
+            <p class="page-desc">Add and manage IPTV providers</p>
+          </div>
+
+          <div class="card mb">
+            <div class="card-header">
+              <span class="card-title">Add New Source</span>
+              <div class="tab-bar">
+                <button class="tab-btn active" data-tab="add-xc">Xtream Codes</button>
+                <button class="tab-btn" data-tab="add-m3u">M3U URL</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="tab-add-xc" class="tab-panel active">
+                <form id="import-xc-form" class="form-grid">
+                  <div class="field"><label class="field-label">Name <span class="optional">optional</span></label><input id="xc-name" type="text" placeholder="My Provider" /></div>
+                  <div class="field"><label class="field-label">Server URL</label><input id="xc-server" type="text" placeholder="http://host:port" required /></div>
+                  <div class="field"><label class="field-label">Username</label><input id="xc-user" type="text" required autocomplete="off" /></div>
+                  <div class="field"><label class="field-label">Password</label><input id="xc-pass" type="password" required autocomplete="off" /></div>
+                  <div class="field"><label class="field-label">Output</label><select id="xc-output"><option value="ts">TS (MPEG)</option><option value="m3u8">M3U8 (HLS)</option></select></div>
+                  <div class="field"><label class="field-label">EPG URL <span class="optional">auto-detected</span></label><input id="xc-epg" type="text" placeholder="http://host/xmltv.php" /></div>
+                  <div class="field" style="align-self:end"><button type="submit" class="btn btn-primary" id="xc-submit-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Import Source
+                  </button></div>
+                </form>
+              </div>
+              <div id="tab-add-m3u" class="tab-panel">
+                <form id="import-m3u-form" class="form-grid">
+                  <div class="field"><label class="field-label">Name <span class="optional">optional</span></label><input id="m3u-name" type="text" placeholder="My M3U" /></div>
+                  <div class="field"><label class="field-label">M3U URL</label><input id="m3u-url" type="text" placeholder="http://provider/get.php?..." required /></div>
+                  <div class="field"><label class="field-label">EPG URL <span class="optional">optional</span></label><input id="m3u-epg" type="text" placeholder="http://provider/xmltv.php" /></div>
+                  <div class="field" style="align-self:end"><button type="submit" class="btn btn-primary" id="m3u-submit-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Import Source
+                  </button></div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Saved Sources</span>
+            </div>
+            <div id="sources-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Editor ───────────────────────────────────────────── -->
+      <div class="page" id="page-editor">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">Channel Editor</h1>
+            <div class="toolbar">
+              <input type="search" id="group-filter" placeholder="Filter groups..." style="max-width:200px" />
+              <select id="group-view-filter" title="Choose which groups to show" style="max-width:145px">
+                <option value="active">Active groups</option>
+                <option value="enabled">All enabled</option>
+                <option value="disabled">Disabled</option>
+                <option value="empty">Empty</option>
+                <option value="archived">Archive</option>
+                <option value="all">All groups</option>
+              </select>
+              <select id="group-category-filter" title="Filter by category" style="max-width:170px">
+                <option value="">All categories</option>
+              </select>
+              <input type="search" id="editor-search" placeholder="Search channels..." />
+              <span class="text-muted" id="ch-count-label"></span>
+              <div style="flex:1"></div>
+              <button id="bulk-rename-btn" class="btn btn-sm" title="Find &amp; replace in channel names">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Rename
+              </button>
+              <button id="duplicates-btn" class="btn btn-sm" title="Find duplicate channels (same URL)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="2" width="13" height="13" rx="2"/><rect x="3" y="9" width="13" height="13" rx="2"/></svg>
+                Duplicates
+              </button>
+              <button id="no-epg-btn" class="btn btn-sm" title="Find channels missing EPG data">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="3" x2="22" y2="17"/></svg>
+                No EPG
+              </button>
+              <button id="favs-filter-btn" class="btn btn-sm" title="Show only favorited channels">★ Favs</button>
+              <button id="sort-alpha-btn" class="btn btn-sm" title="Sort groups alphabetically">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h7"/><path d="M3 12h10"/><path d="M3 18h5"/><path d="M16 6l4 14"/><path d="M20 6l-4 14"/><path d="M14 14h8"/></svg>
+                A-Z
+              </button>
+              <button id="priorities-btn" class="btn btn-sm" title="Manage sort priority keywords">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                Priorities
+              </button>
+              <button id="categories-btn" class="btn btn-sm" title="Group categories — color-coded bands that move together">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="17" width="18" height="4" rx="1"/></svg>
+                Categories
+              </button>
+              <button id="name-epg-btn" class="btn btn-sm" title="Manage dummy EPG keywords">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                Dummy EPG
+              </button>
+              <button id="my-teams-btn" class="btn btn-sm" title="Favorite team keywords — boost matching channels to top of groups">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                My Teams
+              </button>
+              <button id="apply-rules-btn" class="btn btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                Apply Rules
+              </button>
+              <button id="reset-source-btn" class="btn btn-sm btn-danger" title="Reset: wipe all groups and reimport from source">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Reset Source
+              </button>
+              <button id="add-group-btn" class="btn btn-primary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Group
+              </button>
+            </div>
+          </div>
+
+          <div id="group-order-health" class="order-health" hidden>
+            <div>
+              <strong id="group-order-health-title">Checking player order…</strong>
+              <span id="group-order-health-detail"></span>
+            </div>
+            <button id="sync-player-order-btn" class="btn btn-sm">Sync Player Order</button>
+          </div>
+
+          <!-- Sort Priorities Panel -->
+          <div id="priorities-panel" class="card mb" hidden>
+            <div class="card-header">
+              <span class="card-title">Group Sort Priorities</span>
+              <button id="priorities-close" class="btn-icon-only">&times;</button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:12px">Groups matching these keywords (in order) are sorted to the top. Remaining groups are sorted alphabetically. Drag to reorder.</p>
+              <div class="form-row" style="margin-bottom:12px">
+                <input id="new-priority-input" type="text" placeholder="Keyword (e.g. Sports, NFL, PPV)" style="flex:1" />
+                <button id="add-priority-btn" class="btn btn-primary btn-sm">Add</button>
+              </div>
+              <div id="priorities-list"></div>
+            </div>
+          </div>
+
+          <!-- Dummy EPG Keywords Panel -->
+          <div id="name-epg-panel" class="card mb" hidden>
+            <div class="card-header">
+              <span class="card-title">Dummy EPG Keywords</span>
+              <button id="name-epg-close" class="btn-icon-only">&times;</button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:12px">Groups whose names match these keywords will automatically use dummy EPG (channel name as guide data). This persists across source reloads &mdash; future-proofing your setup.</p>
+              <div class="form-row" style="margin-bottom:12px">
+                <input id="new-name-epg-input" type="text" placeholder="Keyword (e.g. Sports, PPV, 24/7)" style="flex:1" />
+                <button id="add-name-epg-btn" class="btn btn-primary btn-sm">Add</button>
+              </div>
+              <div id="name-epg-list"></div>
+            </div>
+          </div>
+
+          <!-- My Teams Panel -->
+          <div id="my-teams-panel" class="card mb" hidden>
+            <div class="card-header">
+              <span class="card-title">My Teams</span>
+              <button id="my-teams-close" class="btn-icon-only">&times;</button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:12px">Channels whose names match these keywords are boosted to the top of their group. Works dynamically &mdash; as channel names update throughout the day, the sort updates automatically.</p>
+              <div class="form-row" style="margin-bottom:12px">
+                <input id="new-team-input" type="text" placeholder="Team name (e.g. Lakers, Yankees, Arsenal)" style="flex:1" />
+                <button id="add-team-btn" class="btn btn-primary btn-sm">Add</button>
+              </div>
+              <div id="my-teams-list"></div>
+            </div>
+          </div>
+
+          <!-- Group Categories Panel -->
+          <div id="categories-panel" class="card mb" hidden>
+            <div class="card-header">
+              <span class="card-title">Group Categories</span>
+              <button id="categories-close" class="btn-icon-only">&times;</button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:12px">Color-coded bands that keep groups together. Groups in the same category always move as a block and maintain their relative order. Drag categories to reorder bands.</p>
+              <div class="form-row" style="margin-bottom:12px;gap:8px">
+                <input id="new-cat-name" type="text" placeholder="Category name (e.g. Sports, Entertainment)" style="flex:1" />
+                <input id="new-cat-color" type="color" value="#3b82f6" style="width:36px;height:32px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer" />
+                <button id="add-cat-btn" class="btn btn-primary btn-sm">Add</button>
+              </div>
+              <div id="categories-list"></div>
+            </div>
+          </div>
+
+          <!-- Bulk Rename Panel -->
+          <div id="bulk-rename-panel" class="card mb" hidden>
+            <div class="card-header">
+              <span class="card-title">Find &amp; Replace Channel Names</span>
+              <button id="bulk-rename-close" class="btn-icon-only">&times;</button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:12px">Find text in channel names and replace it. Supports plain text or regex.</p>
+              <div class="form-row" style="margin-bottom:8px;gap:8px">
+                <input id="rename-find" type="text" placeholder="Find..." style="flex:1" />
+                <input id="rename-replace" type="text" placeholder="Replace with..." style="flex:1" />
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap"><input type="checkbox" id="rename-regex" /> Regex</label>
+                <button id="rename-preview-btn" class="btn btn-sm">Preview</button>
+                <button id="rename-apply-btn" class="btn btn-sm btn-primary">Apply</button>
+              </div>
+              <div id="rename-preview-results" class="text-muted" style="font-size:12px"></div>
+            </div>
+          </div>
+
+          <!-- Duplicates Panel -->
+          <div id="duplicates-panel" class="card mb" hidden>
+            <div class="card-header">
+              <span class="card-title">Duplicate Channels</span>
+              <button id="duplicates-close" class="btn-icon-only">&times;</button>
+            </div>
+            <div id="duplicates-body" class="card-body">
+              <span class="text-muted">Loading...</span>
+            </div>
+          </div>
+
+          <!-- Search Results -->
+          <div id="search-results" class="card mb" hidden>
+            <div class="card-header">
+              <span class="card-title">Search Results</span>
+              <button id="search-close" class="btn-icon-only">&times;</button>
+            </div>
+            <div class="ch-toolbar" id="search-bulk-bar" hidden>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600">
+                <input type="checkbox" id="search-select-all" /> Select All
+              </label>
+              <span class="sel-count" id="search-selected-count">0 selected</span>
+              <div style="flex:1"></div>
+              <select id="search-bulk-group" style="font-size:12px"><option value="">Move/Copy to group...</option></select>
+              <button id="search-bulk-move-btn" class="btn btn-sm">Move</button>
+              <button id="search-bulk-copy-btn" class="btn btn-sm">Copy</button>
+              <button id="search-bulk-enable-btn" class="btn btn-sm btn-success">Enable</button>
+              <button id="search-bulk-disable-btn" class="btn btn-sm btn-ghost">Disable</button>
+              <button id="search-bulk-fav-btn" class="btn btn-sm" style="color:var(--warning)">★ Fav</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th style="width:32px"><input type="checkbox" id="search-sel-hdr" /></th><th>Name</th><th>Source Group</th><th>Group</th><th>TVG-ID</th><th style="width:48px">On</th><th style="width:32px">★</th><th>Move</th><th>Copy</th></tr></thead>
+                <tbody id="search-body"></tbody>
+              </table>
+            </div>
+            <div id="search-pagination" class="pagination" hidden>
+              <span id="search-page-info"></span>
+              <button id="search-load-more" class="btn btn-sm">Load More</button>
+            </div>
+          </div>
+
+          <!-- Groups -->
+          <div id="groups-list"></div>
+        </div>
+      </div>
+
+      <!-- ── Favorites ────────────────────────────────────────── -->
+      <div class="page" id="page-favorites">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">Favorites</h1>
+            <p class="page-desc">Your starred channels for quick access</p>
+          </div>
+          <div class="card">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Name</th><th>Group</th><th>TVG-ID</th><th style="width:48px">On</th><th style="width:32px">★</th></tr></thead>
+                <tbody id="favorites-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EPG ──────────────────────────────────────────────── -->
+      <div class="page" id="page-epg">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">EPG Sources</h1>
+            <p class="page-desc">Electronic program guide configuration</p>
+          </div>
+          <div id="suggested-epg-card" class="card mb" hidden>
+            <div class="card-header"><span class="card-title">Suggested EPG Sources</span></div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:12px">Free public EPG sources for OTA and cable channels. Click to add.</p>
+              <div id="suggested-epg-list"></div>
+            </div>
+          </div>
+          <div class="card mb">
+            <div class="card-header"><span class="card-title">Active Source EPG URL</span></div>
+            <div class="card-body">
+              <form id="epg-form" class="form-row">
+                <div class="field" style="flex:1"><input id="epg-url" type="text" placeholder="EPG / XMLTV URL" style="width:100%" /></div>
+                <button type="submit" class="btn btn-primary">Save</button>
+              </form>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Additional EPG Sources</span></div>
+            <div class="card-body">
+              <form id="add-epg-form" class="form-row" style="margin-bottom:12px">
+                <div class="field" style="width:180px"><input id="new-epg-name" type="text" placeholder="Name" style="width:100%" /></div>
+                <div class="field" style="flex:1"><input id="new-epg-url" type="text" placeholder="XMLTV URL" style="width:100%" required /></div>
+                <button type="submit" class="btn btn-primary">Add</button>
+              </form>
+            </div>
+            <div id="epg-list"></div>
+          </div>
+          <div class="card mt">
+            <div class="card-header">
+              <span class="card-title">Explore EPG Channels</span>
+              <button id="epg-explore-refresh" class="btn btn-sm" title="Force refresh EPG cache">Refresh Cache</button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:8px">Search across all your configured EPG sources to browse available channels.</p>
+              <div class="form-row" style="margin-bottom:8px">
+                <input type="search" id="epg-explore-input" placeholder="Search by name or ID (e.g. KDKA, ESPN, CBS)..." style="flex:1" />
+              </div>
+              <div id="epg-explore-status" class="text-muted" style="font-size:11px;margin-bottom:8px"></div>
+              <div id="epg-explore-results"></div>
+            </div>
+          </div>
+          <div class="card mt">
+            <div class="card-header">
+              <span class="card-title">Auto-Match Unmatched Channels</span>
+              <button id="auto-match-btn" class="btn btn-primary btn-sm">Find Matches</button>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:8px">Scans channels with no EPG and finds the best match by similarity score. Provider EPG is always used first — this only targets channels still unmatched.</p>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <label class="text-muted" style="font-size:12px;white-space:nowrap">Min score:</label>
+                <input type="range" id="auto-match-threshold" min="20" max="90" value="40" style="flex:1" />
+                <span id="auto-match-threshold-val" style="font-size:12px;width:32px;text-align:center">40%</span>
+              </div>
+              <div id="auto-match-results"></div>
+            </div>
+          </div>
+          <div class="card mt">
+            <div class="card-header">
+              <span class="card-title">EPG Coverage Report</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button id="epg-coverage-btn" class="btn btn-primary btn-sm">Run Report</button>
+                <button id="epg-dashboard-btn" class="btn btn-sm">Dashboard</button>
+                <button id="epg-stale-btn" class="btn btn-sm" title="Channels with no guide data in the next 24h">Stale Guides</button>
+                <button id="epg-diff-btn" class="btn btn-sm">Export Diff</button>
+                <button id="epg-repair-btn" class="btn btn-sm">Repair Pack</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted" style="margin-bottom:8px">Shows what percentage of your enabled channels have real EPG data matched.</p>
+              <div id="epg-coverage-result"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="page-export">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">Export</h1>
+            <p class="page-desc">Your M3U + EPG links — always up to date</p>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Direct URLs</span></div>
+            <div class="card-body">
+              <p class="text-muted mb">Point Dispatcharr or any IPTV app at these URLs. They auto-update whenever sources are imported or refreshed.</p>
+              <div class="url-row"><span class="url-label">M3U</span><code class="url-value" id="m3u-direct-url"></code><button class="btn btn-sm btn-ghost copy-btn" data-target="m3u-direct-url">Copy</button><a id="m3u-view-btn" class="btn btn-sm btn-ghost" target="_blank" rel="noopener">View</a></div>
+              <div class="url-row"><span class="url-label">EPG</span><code class="url-value" id="epg-direct-url"></code><button class="btn btn-sm btn-ghost copy-btn" data-target="epg-direct-url">Copy</button><a id="epg-view-btn" class="btn btn-sm btn-ghost" target="_blank" rel="noopener">View</a></div>
+            </div>
+          </div>
+          <div class="card mt">
+            <div class="card-header"><span class="card-title">Download Files</span></div>
+            <div class="card-body">
+              <div class="export-links" id="export-download-links">
+                <a id="m3u-download-btn" class="btn btn-primary" download="organized.m3u">Download M3U</a>
+                <a id="epg-download-btn" class="btn btn-primary" download="organized.xml" style="margin-left:.5rem">Download EPG</a>
+              </div>
+            </div>
+          </div>
+          <div class="card mt">
+            <div class="card-header">
+              <span class="card-title">Export History</span>
+              <button id="export-history-refresh" class="btn btn-sm btn-ghost">Refresh</button>
+            </div>
+            <div id="export-history-body" class="card-body">
+              <p class="text-muted">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Teamarr ──────────────────────────────────────────── -->
+      <div class="page" id="page-teamarr">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">Teamarr</h1>
+            <p class="page-desc">XC-compatible proxy — IPTV apps connect directly to this server</p>
+          </div>
+          <div class="card mb">
+            <div class="card-header"><span class="card-title">Configuration</span></div>
+            <div class="card-body">
+              <p class="text-muted mb">When enabled, IPTV apps (TiviMate, Smarters, XCIPTV) can connect using Xtream Codes credentials and see only your curated channel list.</p>
+              <form id="teamarr-form">
+                <div class="form-grid form-grid-2">
+                  <div class="field"><label class="field-label">Status</label><select id="ta-enabled"><option value="0">Disabled</option><option value="1">Enabled</option></select></div>
+                  <div class="field"><label class="field-label">Base URL <span class="optional">server address</span></label><input id="ta-base-url" type="text" placeholder="http://yourserver:43817" /></div>
+                  <div class="field"><label class="field-label">Username</label><input id="ta-username" type="text" autocomplete="off" /></div>
+                  <div class="field"><label class="field-label">Password</label><input id="ta-password" type="text" autocomplete="off" /></div>
+                  <div class="field"><label class="field-label">Output Format</label><select id="ta-output"><option value="ts">TS (MPEG)</option><option value="m3u8">M3U8 (HLS)</option></select></div>
+                </div>
+                <div class="mt"><button type="submit" class="btn btn-primary">Save Settings</button></div>
+              </form>
+            </div>
+          </div>
+          <div id="teamarr-info" class="card" hidden>
+            <div class="card-header"><span class="card-title">Connection Details</span></div>
+            <div class="card-body">
+              <p class="text-muted mb">Enter these in your IPTV app's Xtream Codes login:</p>
+              <div class="url-row"><span class="url-label">Server</span><code class="url-value" id="ta-server-url"></code><button class="btn btn-sm btn-ghost copy-btn" data-target="ta-server-url">Copy</button></div>
+              <div class="url-row"><span class="url-label">Username</span><code class="url-value" id="ta-show-user"></code></div>
+              <div class="url-row"><span class="url-label">Password</span><code class="url-value" id="ta-show-pass"></code></div>
+              <div class="url-row"><span class="url-label">EPG URL</span><code class="url-value" id="ta-epg-url"></code><button class="btn btn-sm btn-ghost copy-btn" data-target="ta-epg-url">Copy</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TV Guide ──────────────────────────────────────────── -->
+      <div class="page" id="page-guide">
+        <div class="page-wrap" style="max-width:none">
+          <div class="page-header">
+            <h1 class="page-title">TV Guide</h1>
+            <div class="toolbar guide-toolbar">
+              <label class="guide-group-picker"><span>Group</span><select id="guide-group-select" aria-label="Guide group"><option>Loading groups…</option></select></label>
+              <input type="search" id="guide-search" placeholder="Filter channels..." />
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary)"><input type="checkbox" id="guide-active-only" /> Active only</label>
+              <button id="guide-jump-minus2" class="btn btn-sm">&laquo; &minus;2h</button>
+              <button id="guide-jump-now" class="btn btn-sm">Now</button>
+              <button id="guide-jump-plus2" class="btn btn-sm">+2h</button>
+              <button id="guide-jump-plus6" class="btn btn-sm">+6h &raquo;</button>
+              <button id="guide-refresh-btn" class="btn btn-sm">Refresh EPG</button>
+            </div>
+          </div>
+          <div id="guide-now-bar" class="text-muted" style="margin-bottom:8px"></div>
+          <div id="guide-legend" class="text-muted" style="margin-bottom:8px;font-size:11px">Legend: <span style="color:var(--text-primary)">Real</span> · <span style="color:var(--warning)">Synthetic</span> · <span style="color:var(--danger)">Dummy</span></div>
+          <div class="guide-layout">
+            <div class="guide-sidebar" id="guide-sidebar">
+              <div class="guide-sidebar-header">Groups</div>
+              <div class="guide-sidebar-list" id="guide-group-list">
+                <button class="guide-group-btn active" data-gid="">All Channels</button>
+              </div>
+            </div>
+            <div id="guide-container" class="guide-container">
+              <button class="guide-arrow guide-arrow-left" id="guide-arrow-left" title="Scroll left 2 hours">&#8249;</button>
+              <button class="guide-arrow guide-arrow-right" id="guide-arrow-right" title="Scroll right 2 hours">&#8250;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Channel Preview Modal -->
+      <div id="preview-modal" class="modal-overlay" hidden>
+        <div class="modal preview-modal">
+          <div class="modal-header">
+            <div class="preview-ch-info">
+              <img id="preview-logo" class="preview-logo" src="" alt="" />
+              <div>
+                <div id="preview-ch-name" class="preview-ch-name"></div>
+                <div id="preview-ch-now" class="text-muted" style="font-size:12px"></div>
+              </div>
+            </div>
+            <button class="btn-icon-only" id="preview-close">&times;</button>
+          </div>
+          <div class="preview-player-wrap">
+            <video id="preview-player" controls autoplay></video>
+          </div>
+          <div id="preview-schedule" class="preview-schedule"></div>
+        </div>
+      </div>
+
+      <!-- ── Settings ─────────────────────────────────────────── -->
+      <div class="page" id="page-settings">
+        <div class="page-wrap">
+          <div class="page-header">
+            <h1 class="page-title">Settings</h1>
+            <p class="page-desc">Backup, restore, and system configuration</p>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Backup &amp; Restore</span></div>
+            <div class="card-body">
+              <p class="text-muted mb">Download a full backup of all sources, channels, groups, rules, and settings.</p>
+              <div class="btn-row">
+                <a href="/api/backup" class="btn btn-primary" download>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download Backup
+                </a>
+                <label class="btn" style="cursor:pointer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Restore from Backup
+                  <input type="file" id="restore-file" accept=".json" hidden />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Auto Refresh</span></div>
+            <div class="card-body">
+              <p class="text-muted mb">Automatically reimport channels from all active sources and rebuild EPG data on a schedule.</p>
+              <form id="refresh-settings-form" class="form-grid" style="gap:12px">
+                <div class="form-row" style="align-items:center;gap:12px">
+                  <label for="refresh-interval" style="white-space:nowrap;font-weight:600">Refresh every</label>
+                  <select id="refresh-interval" style="width:auto">
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                    <option value="360">6 hours</option>
+                    <option value="720">12 hours</option>
+                    <option value="1440">24 hours</option>
+                  </select>
+                </div>
+                <div class="form-row" style="align-items:center;gap:12px">
+                  <label for="epg-window-days" style="white-space:nowrap;font-weight:600">EPG guide window</label>
+                  <select id="epg-window-days" style="width:auto">
+                    <option value="1">1 day</option>
+                    <option value="2">2 days</option>
+                    <option value="3">3 days</option>
+                    <option value="4">4 days</option>
+                    <option value="5">5 days</option>
+                    <option value="7">7 days</option>
+                    <option value="10">10 days</option>
+                    <option value="14">14 days</option>
+                  </select>
+                  <span class="text-muted" style="font-size:12px">How far ahead to build &amp; show programme listings</span>
+                </div>
+                <div class="form-row" style="gap:8px">
+                  <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                  <button type="button" id="refresh-now-btn" class="btn btn-sm">Refresh Now</button>
+                </div>
+              </form>
+              <div id="refresh-status" class="text-muted" style="margin-top:10px;font-size:12px"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Smart Groups</span>
+              <label class="toggle" style="margin-left:auto">
+                <input type="checkbox" id="smart-groups-enabled" />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="card-body" id="smart-groups-body">
+              <p class="text-muted mb">Automatically creates a group for each selected city when their teams are playing. Channels are <strong>copied</strong> — originals stay in their existing groups. Groups are pinned to the top and refresh every hour.</p>
+              <div class="form-row" style="align-items:center;gap:12px;margin-bottom:12px">
+                <label for="sg-window" style="white-space:nowrap;font-weight:600">Lookahead window</label>
+                <select id="sg-window" style="width:auto">
+                  <option value="2">2 hours</option>
+                  <option value="4" selected>4 hours</option>
+                  <option value="6">6 hours</option>
+                  <option value="12">12 hours</option>
+                  <option value="24">24 hours</option>
+                </select>
+              </div>
+              <div style="font-weight:600;margin-bottom:8px">Select your cities</div>
+              <div id="smart-groups-cities" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 16px;max-height:360px;overflow-y:auto;padding:8px;border:1px solid var(--border);border-radius:8px"></div>
+              <details style="margin-top:12px">
+                <summary style="cursor:pointer;font-weight:600;font-size:13px">Additional custom keywords</summary>
+                <input type="text" id="sg-custom-keywords" placeholder="Extra keywords (comma-separated, e.g. nittany lions, thunderbirds)" style="width:100%;margin-top:8px" />
+              </details>
+
+              <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                  <span style="font-weight:600">Locals by city</span>
+                  <label class="toggle" style="margin-left:auto">
+                    <input type="checkbox" id="sg-locals-enabled" />
+                    <span class="toggle-track"></span>
+                  </label>
+                </div>
+                <p class="text-muted mb" style="font-size:12px">Populates the existing <code>US | Locals</code> group with the local stations (ABC, CBS, NBC, FOX, CW/My, PBS) for each city below. One per line — append a state to disambiguate (e.g. <code>Charleston, SC</code>).</p>
+                <textarea id="sg-locals-cities" rows="4" placeholder="Denver, CO&#10;Portland, OR&#10;Austin, TX" style="width:100%;font-family:inherit;font-size:13px"></textarea>
+                <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px">
+                  <input type="checkbox" id="sg-locals-weather" />
+                  Include US weather channels (The Weather Channel, Accuweather, FOX Weather) at top
+                </label>
+              </div>
+
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <button type="button" id="save-smart-groups-btn" class="btn btn-primary btn-sm">Save</button>
+                <button type="button" id="refresh-smart-groups-btn" class="btn btn-sm">Refresh Now</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Recent Backend Errors</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button type="button" id="system-errors-refresh" class="btn btn-sm">Refresh</button>
+                <button type="button" id="system-errors-clear" class="btn btn-sm btn-ghost">Clear</button>
+              </div>
+            </div>
+            <div class="card-body" id="system-errors-body">
+              <p class="text-muted">Loading...</p>
+            </div>
+          </div>
+
+          <!-- ── Integrations: Dispatcharr auto-refresh + ntfy ─────────── -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Integrations</span></div>
+            <div class="card-body">
+              <form id="integrations-form" class="form-grid" style="gap:14px">
+                <div>
+                  <div style="font-weight:600;margin-bottom:6px">Dispatcharr auto-refresh</div>
+                  <p class="text-muted mb" style="font-size:12px">After each export, ping Dispatcharr to refresh its M3U account so new match logos &amp; channels land immediately. Credentials are stored only to mint a short-lived token for the call.</p>
+                  <div class="form-grid form-grid-2">
+                    <div class="field"><label class="field-label">Status</label><select id="da-enabled"><option value="0">Disabled</option><option value="1">Enabled</option></select></div>
+                    <div class="field"><label class="field-label">Dispatcharr URL</label><input id="da-url" type="text" placeholder="http://dispatcharr:9191" autocomplete="off" /></div>
+                    <div class="field"><label class="field-label">Username</label><input id="da-username" type="text" autocomplete="off" /></div>
+                    <div class="field"><label class="field-label">Password</label><input id="da-password" type="password" autocomplete="off" /></div>
+                    <div class="field"><label class="field-label">M3U account ID</label><input id="da-account" type="text" placeholder="13" autocomplete="off" /></div>
+                    <div class="field"><label class="field-label">EPG source ID</label><input id="da-epg" type="text" placeholder="9" autocomplete="off" /></div>
+                  </div>
+                </div>
+                <div style="border-top:1px solid var(--border);padding-top:12px">
+                  <div style="font-weight:600;margin-bottom:6px">ntfy notifications</div>
+                  <p class="text-muted mb" style="font-size:12px">Push alerts on a degraded EPG guide or a failed Dispatcharr refresh.</p>
+                  <div class="form-grid form-grid-2">
+                    <div class="field"><label class="field-label">Status</label><select id="ntfy-enabled"><option value="0">Disabled</option><option value="1">Enabled</option></select></div>
+                    <div class="field"><label class="field-label">Server URL</label><input id="ntfy-url" type="text" placeholder="https://ntfy.sh" autocomplete="off" /></div>
+                    <div class="field"><label class="field-label">Topic</label><input id="ntfy-topic" type="text" placeholder="m3uboss" autocomplete="off" /></div>
+                    <div class="field"><label class="field-label">Token <span class="optional">optional</span></label><input id="ntfy-token" type="password" autocomplete="off" /></div>
+                  </div>
+                </div>
+                <div class="form-row" style="gap:8px"><button type="submit" class="btn btn-primary btn-sm">Save Integrations</button></div>
+              </form>
+            </div>
+          </div>
+
+          <!-- ── Match Logos ───────────────────────────────────────────── -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Match Logos</span>
+              <button type="button" id="logo-coverage-refresh" class="btn btn-sm" style="margin-left:auto">Refresh</button>
+            </div>
+            <div class="card-body">
+              <div id="logo-coverage-body"><p class="text-muted">Click Refresh to load logo diagnostics.</p></div>
+              <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+                <div style="font-weight:600;margin-bottom:6px">Manual team badge override</div>
+                <p class="text-muted mb" style="font-size:12px">Pin a badge image URL for a team TheSportsDB can't find or gets wrong. Applies on the next export.</p>
+                <form id="logo-override-form" class="form-grid form-grid-2" style="gap:8px">
+                  <div class="field"><label class="field-label">Team</label><input id="lo-team" type="text" placeholder="D.C. Defenders" autocomplete="off" /></div>
+                  <div class="field"><label class="field-label">Sport</label><input id="lo-sport" type="text" placeholder="American Football" autocomplete="off" /></div>
+                  <div class="field" style="grid-column:1/-1"><label class="field-label">Badge image URL</label><input id="lo-url" type="text" placeholder="https://…/badge.png" autocomplete="off" /></div>
+                  <div class="form-row" style="gap:8px;grid-column:1/-1">
+                    <button type="submit" class="btn btn-primary btn-sm">Save Override</button>
+                    <button type="button" id="logo-clear-neg" class="btn btn-sm">Retry failed lookups</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── EPG Diagnostics ───────────────────────────────────────── -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">EPG Diagnostics</span>
+              <button type="button" id="epg-diag-refresh" class="btn btn-sm" style="margin-left:auto">Refresh</button>
+            </div>
+            <div class="card-body" id="epg-diag-body"><p class="text-muted">Click Refresh to load EPG diagnostics.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EPG Search Modal -->
+      <div id="epg-search-modal" class="modal-overlay" hidden>
+        <div class="modal" style="max-width:560px;max-height:80vh;display:flex;flex-direction:column">
+          <div class="modal-header">
+            <span class="card-title">Search EPG Channels</span>
+            <button class="btn-icon-only" id="epg-search-close">&times;</button>
+          </div>
+          <div style="padding:12px 16px 0">
+            <input type="search" id="epg-search-input" placeholder="Search by name or ID (e.g. KDKA, ESPN, CBS)..." style="width:100%" autofocus />
+            <div id="epg-search-status" class="text-muted" style="font-size:11px;margin-top:6px"></div>
+          </div>
+          <div id="epg-search-results" style="flex:1;overflow-y:auto;padding:8px 16px 16px"></div>
+        </div>
+      </div>
+
+      <!-- Group Templates Modal -->
+      <div id="templates-modal" class="modal-overlay" hidden>
+        <div class="modal" style="max-width:520px;max-height:80vh;display:flex;flex-direction:column">
+          <div class="modal-header">
+            <span class="card-title">Group Templates</span>
+            <button class="btn-icon-only" id="templates-modal-close">&times;</button>
+          </div>
+          <div style="padding:12px 16px;flex:1;overflow-y:auto">
+            <p class="text-muted" style="margin-bottom:12px;font-size:13px">Save a group's rules and settings as a template, then apply it to other groups.</p>
+            <div id="templates-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import Diff Modal -->
+      <div id="import-diff-modal" class="modal-overlay" hidden>
+        <div class="modal" style="max-width:520px;max-height:80vh;display:flex;flex-direction:column">
+          <div class="modal-header">
+            <span class="card-title" id="import-diff-title">Last Import Changes</span>
+            <button class="btn-icon-only" id="import-diff-close">&times;</button>
+          </div>
+          <div id="import-diff-body" style="padding:16px;flex:1;overflow-y:auto"></div>
+        </div>
+      </div>
+
+      <!-- Health Check Modal -->
+      <div id="health-modal" class="modal-overlay" hidden>
+        <div class="modal" style="max-width:640px;max-height:80vh;display:flex;flex-direction:column">
+          <div class="modal-header">
+            <span class="card-title" id="health-modal-title">Channel Health Check</span>
+            <button class="btn-icon-only" id="health-modal-close">&times;</button>
+          </div>
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center">
+            <span class="text-muted" id="health-modal-status" style="font-size:13px;flex:1"></span>
+            <button id="health-modal-run" class="btn btn-primary btn-sm">Run Check</button>
+            <button id="health-modal-clear" class="btn btn-sm btn-ghost">Clear Results</button>
+          </div>
+          <div id="health-modal-body" style="flex:1;overflow-y:auto;padding:8px 16px 16px"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Global command palette -->
+  <div id="command-palette" class="command-overlay" hidden>
+    <div class="command-dialog" role="dialog" aria-modal="true" aria-label="Quick actions">
+      <div class="command-search-wrap">
+        <span>⌕</span>
+        <input id="command-search" type="search" placeholder="Go to a page or run an action…" autocomplete="off" />
+        <kbd>Esc</kbd>
+      </div>
+      <div id="command-results" class="command-results"></div>
+      <div class="command-hint">↑↓ choose · Enter run · Ctrl/⌘ K open</div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=9"></script>
+</body>
+</html>

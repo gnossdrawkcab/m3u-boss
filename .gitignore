@@ -1,0 +1,35 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+test-results/
+playwright-report/
+node_modules/
+.DS_Store
+.idea/
+.vscode/
+compose.override.yaml
+compose.private.yaml
+private/
+
+# Runtime state and credential-bearing generated files
+data/
+exports/
+edge-cache/
+safety-snapshots/
+backups/
+*.db
+*.db-*
+*.sqlite*
+*.m3u
+*.m3u8
+*.xml.gz
+
+# Local analysis output and historical working copies
+graphify-out/
+*.bak
+*.bak-*
+*.orig

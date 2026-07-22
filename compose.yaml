@@ -1,0 +1,23 @@
+services:
+  m3u-boss:
+    build: .
+    image: m3u-boss:0.1.0-alpha.1
+    init: true
+    ports:
+      - "${M3U_BOSS_PORT:-43817}:43817"
+    environment:
+      M3U_BOSS_PORT: "43817"
+      M3U_BOSS_ADMIN_USERNAME: "${M3U_BOSS_ADMIN_USERNAME:-admin}"
+      M3U_BOSS_ADMIN_PASSWORD: "${M3U_BOSS_ADMIN_PASSWORD:?Set M3U_BOSS_ADMIN_PASSWORD in .env}"
+      M3U_BOSS_FEED_TOKEN: "${M3U_BOSS_FEED_TOKEN:?Set M3U_BOSS_FEED_TOKEN in .env}"
+      M3U_BOSS_PUBLIC_URL: "${M3U_BOSS_PUBLIC_URL:-http://localhost:43817}"
+      M3U_BOSS_CORS_ORIGINS: "${M3U_BOSS_CORS_ORIGINS:-}"
+      M3U_BOSS_STREAM_REWRITES: "${M3U_BOSS_STREAM_REWRITES:-{}}"
+    volumes:
+      - m3u-boss-data:/app/data
+      - m3u-boss-exports:/app/exports
+    restart: unless-stopped
+
+volumes:
+  m3u-boss-data:
+  m3u-boss-exports:

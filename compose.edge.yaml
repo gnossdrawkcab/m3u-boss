@@ -1,0 +1,46 @@
+services:
+  m3u-boss:
+    build: .
+    image: m3u-boss:0.1.0-alpha.1
+    init: true
+    expose:
+      - "43818"
+    environment:
+      M3U_BOSS_PORT: "43818"
+      M3U_BOSS_ADMIN_USERNAME: "${M3U_BOSS_ADMIN_USERNAME:-admin}"
+      M3U_BOSS_ADMIN_PASSWORD: "${M3U_BOSS_ADMIN_PASSWORD:?Set M3U_BOSS_ADMIN_PASSWORD in .env}"
+      M3U_BOSS_FEED_TOKEN: "${M3U_BOSS_FEED_TOKEN:?Set M3U_BOSS_FEED_TOKEN in .env}"
+      M3U_BOSS_PUBLIC_URL: "${M3U_BOSS_PUBLIC_URL:-http://localhost:43817}"
+      M3U_BOSS_CORS_ORIGINS: "${M3U_BOSS_CORS_ORIGINS:-}"
+      M3U_BOSS_STREAM_REWRITES: "${M3U_BOSS_STREAM_REWRITES:-{}}"
+    volumes:
+      - m3u-boss-data:/app/data
+      - m3u-boss-exports:/app/exports
+    restart: unless-stopped
+
+  m3u-edge:
+    build: ./edge
+    image: m3u-boss-edge:0.1.0-alpha.1
+    ports:
+      - "${M3U_BOSS_PORT:-43817}:43817"
+    environment:
+      LISTEN_ADDR: ":43817"
+      BACKEND_URL: "http://m3u-boss:43818"
+      EXPORTS_DIR: "/app/exports"
+      CACHE_DIR: "/app/cache"
+      UI_REQUIRE_CF_ACCESS: "${UI_REQUIRE_CF_ACCESS:-false}"
+      DISPATCHARR_EPG_URL: "${DISPATCHARR_EPG_URL:-}"
+      M3U_BOSS_FEED_TOKEN: "${M3U_BOSS_FEED_TOKEN:?Set M3U_BOSS_FEED_TOKEN in .env}"
+      DISP_EPG_REFRESH_MIN: "${DISP_EPG_REFRESH_MIN:-30}"
+    volumes:
+      - m3u-boss-exports:/app/exports:ro
+      - m3u-boss-edge-cache:/app/cache
+    depends_on:
+      m3u-boss:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  m3u-boss-data:
+  m3u-boss-exports:
+  m3u-boss-edge-cache:
